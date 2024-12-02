@@ -7,11 +7,12 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
 
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Nest API')
+    .setDescription('')
     .setVersion('1.0')
-    .addTag('cats')
+    .addTag('')
     .build();
+    
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 

@@ -1,53 +1,79 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { User } from './users.model';
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { DataSource, Repository, UpdateResult } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
 
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User) private UserRepository: typeof User) {}
 
-  async createUser(dto: CreateUserDto): Promise<any> {
-    try {
-      const user = await this.UserRepository.create(dto);
-      return user;
-    }
-    catch (err) {
-      console.log(`Ошибка при создании пользователя ${dto.email}: ${err.message}`);
-      throw new BadRequestException();
-    }
-  }
 
-  async getAllUsers(): Promise<any> {
-    const users = await this.UserRepository.findAll();
-    return users;
-  }
+    constructor(
+        @InjectRepository(User)
+        private readonly usersRepository: Repository<User>
+    ) { }
 
-  async getUserById(id: number) {
-    const user = await this.UserRepository.findOne({
-      where: {
-        id
-      }
-    });
 
-    if (!user) {
-      console.log(`Пользователя с id = ${id} не существует`);
-      throw new BadRequestException();
+    async createUser(createUserDto: CreateUserDto): Promise<User> {
+        return this.usersRepository.create({ ...createUserDto });
     }
 
-    return user;
-  }
 
-  async getUser(email: string) {
-    const user = await this.UserRepository.findOne({
-      where: {
-        email
-      }
-    });
-
-    if (!user) {
-      throw new BadRequestException();
+    async getAllUsers(): Promise<any> {
+        return await this.usersRepository.find();
     }
-  }
+
+
+    async getUserById(id: number): Promise<User> {
+
+        const user = await this.usersRepository.findOne({
+            where: {
+                id
+            }
+        });
+
+        if (!user) {
+            throw new BadRequestException(`Пользователя с id = ${id} не существует`);
+        }
+
+        return user;
+    }
+
+
+    async updateUserById(id: number, updateUserDto: UpdateUserDto): Promise<UpdateResult> {
+
+        const { email, username, password } = updateUserDto;
+
+        const user = this.usersRepository.findOne({
+            where: {
+                id
+            }
+        })
+
+        if (!user) {
+            throw new BadRequestException(`Пользователя с id = ${id} не существует`);
+        }
+
+        return await this.usersRepository.update({ id }, { email, username, password });
+    }
+
+    deleteUserById(id: number): { id: number } {
+
+        const user = this.usersRepository.findOneBy({ id });
+
+        if (!user) {
+            throw new BadRequestException(`Пользователя с id = ${id} не существует`);
+        }
+
+        try {
+            this.usersRepository.delete(id);
+            return { id };
+        }
+        catch (err) {
+            throw new BadRequestException(err);
+        }
+    }
 }
