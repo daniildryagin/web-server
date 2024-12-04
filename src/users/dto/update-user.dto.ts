@@ -1,5 +1,6 @@
-export class UpdateUserDto {
-  readonly email?: string;
-  readonly username?: string;
-  readonly password?: string;
+import { PartialType } from "@nestjs/swagger";
+import { CreateUserDto } from "./create-user.dto";
+import { IsString, Length } from "class-validator";
+
+export class UpdateUserDto extends PartialType(CreateUserDto) {
 }
