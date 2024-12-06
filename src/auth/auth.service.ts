@@ -1,38 +1,100 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
 import { SignInDto } from './dto/signIn.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from './jwt.constants';
+import { Tokens } from './types/tokens.type';
+import { Payload } from './types/payload.type';
+import { Request } from 'express';
+import { utils } from './utils/utils'
 
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
   ) { }
 
-  async signIn(signInDto: SignInDto) {
+  async signUp(signUpDto: SignInDto): Promise<Tokens> {
+
+    const newUser = await this.usersService.createUser(signUpDto);
+    const payload = this.createPayload(newUser.id, newUser.email);
+    const tokens = await this.getTokens(payload);
+
+    await this.usersService.saveUser(newUser);
+
+    return tokens;
+  }
+
+  async signIn(signInDto: SignInDto): Promise<Tokens> {
+
     const { email, password } = signInDto;
+    let user: User;
 
-    const user = await this.usersRepository.findOneBy({ email });
+    try {
+      user = await this.usersService.getUserByEmail(email);
+    }
+    catch (error) {
+      if (error.name === 'BadRequestException') {
+        throw new UnauthorizedException('Неверный логин или пароль.');
+      }
+    }
 
-    if (!user) {
+    const passwordsEquals = await bcrypt.compare(password, user.password);
+
+    if (!passwordsEquals) {
       throw new UnauthorizedException('Неверный логин или пароль.');
     }
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    const payload = this.createPayload(user.id, user.email);
 
-    if (hashPassword !== user.password) {
-      throw new UnauthorizedException('Неверный логин или пароль.');
-    }
+    return await this.getTokens(payload);
+  }
 
-    const payload = {
-      sub: user.id,
-      login: user.email
+  async refreshTokens(request: Request): Promise<Tokens> {
+
+    const refreshToken = utils.extractToken(request);
+
+    try {
+      const { sub, email } = await this.jwtService.verifyAsync<Payload>(
+        refreshToken,
+        {
+          secret: jwtConstants.RT_SECRET
+        }
+      );
+
+      return await this.getTokens({ sub, email });
     }
+    catch (err) {
+      throw new UnauthorizedException(err.message);
+    }
+  }
+
+  private async getTokens(payload: Payload): Promise<Tokens> {
+
+    const access_token = await this.jwtService.signAsync(
+      payload,
+      {
+        secret: jwtConstants.AT_SECRET,
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRES
+      }
+    );
+
+    const refresh_token = await this.jwtService.signAsync(
+      payload,
+      {
+        secret: jwtConstants.RT_SECRET,
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRES
+      }
+    );
+
+    return { access_token, refresh_token };
+  }
+
+  private createPayload(sub: number, email: string): Payload {
+    return { sub, email };
   }
 }
