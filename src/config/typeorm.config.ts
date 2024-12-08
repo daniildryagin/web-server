@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from "@nestjs/typeorm";
+import { DataSourceOptions } from "typeorm";
 
 export class TypeormConfig implements TypeOrmOptionsFactory {
   createTypeOrmOptions(): TypeOrmModuleOptions {
