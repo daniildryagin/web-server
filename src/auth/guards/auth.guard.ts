@@ -3,12 +3,14 @@ import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { jwtConstants } from "../jwt.constants";
 import { utils } from "../utils/utils";
+import { UsersService } from "src/users/users.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
 
   constructor(
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -25,7 +27,10 @@ export class AuthGuard implements CanActivate {
         secret: jwtConstants.AT_SECRET
       });
 
-      req.user = payload;
+      req.user = {
+        id: payload.sub,
+        email: payload.email
+      };
     }
     catch (exception) {
       throw new UnauthorizedException(exception.message);
