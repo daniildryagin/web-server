@@ -1,18 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, Request as Req } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Post as PostEntity } from './entities/post.entity'
 import { DeleteResult, UpdateResult } from 'typeorm';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { Request } from 'express';
+import { json } from 'stream/consumers';
+import { PostsGuard } from './guards/posts.guards';
 
-
+@UseGuards(AuthGuard)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
 
   @Post()
-  async create(@Body() createPostDto: CreatePostDto): Promise<PostEntity> {
-    return this.postsService.create(createPostDto);
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @Req() req: Request
+  ): Promise<PostEntity> {
+    console.log(JSON.stringify(createPostDto))
+    return await this.postsService.create(createPostDto, req);
   }
 
   @Get()
@@ -25,11 +33,17 @@ export class PostsController {
     return await this.postsService.findOne(id);
   }
 
+  @UseGuards(PostsGuard)
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updatePostDto: UpdatePostDto): Promise<UpdateResult> {
-    return await this.postsService.update(id, updatePostDto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePostDto: UpdatePostDto,
+    @Req() req: Request
+  ): Promise<UpdateResult> {
+    return await this.postsService.update(id, updatePostDto, req);
   }
 
+  @UseGuards(PostsGuard)
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number): Promise<DeleteResult> {
     return await this.postsService.remove(id);
