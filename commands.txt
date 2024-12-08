@@ -1,0 +1,3 @@
+migrations:
+  npm run migration:generate ./src/database/migrations/<название миграции>
+  npm run migration:create ./src/database/migrations/<название миграции>
