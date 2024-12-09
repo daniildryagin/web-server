@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from 'src/users/entities/user.entity';
-import { SignInDto } from './dto/signIn.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -37,8 +37,8 @@ export class AuthService {
     try {
       user = await this.usersService.getUserByEmail(email);
     }
-    catch (error) {
-      if (error.name === 'BadRequestException') {
+    catch (exception) {
+      if (exception.name === 'BadRequestException') {
         throw new UnauthorizedException('Неверный логин или пароль.');
       }
     }
