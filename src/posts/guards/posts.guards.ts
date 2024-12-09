@@ -14,13 +14,13 @@ export class PostsGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
 
-    const postId = req.params.id;
+    const postId = Number(req.params.id);
 
     const post = await this.postsService.findOne(postId);
 
     const user = await this.usersService.getUserById(req['user'].id);
 
-    if (!user.isAdmin && user.id !== post.author.id) {
+    if (!user.isAdmin && user.id !== post.authorId) {
       return false;
     }
 

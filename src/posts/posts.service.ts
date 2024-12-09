@@ -4,10 +4,10 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
-import { Payload } from 'src/auth/types/payload.type';
+import { PostDto } from './dto/post.dto';
+import { UserDataRequest } from 'src/auth/types/user-data-request.type';
 
 @Injectable()
 export class PostsService {
@@ -15,32 +15,46 @@ export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postsRepository: Repository<Post>,
-
     private readonly usersService: UsersService
   ) { }
 
 
-  async create(createPostDto: CreatePostDto, req: Request): Promise<Post> {
-
-    const user = req['user'];
+  async create(createPostDto: CreatePostDto, req: Request): Promise<PostDto> {
 
     const { name, description } = createPostDto;
-    console.log(name, description)
+
+    const user: UserDataRequest = req['user'];
 
     const author = await this.usersService.getUserById(user.id);
 
-    const post = this.postsRepository.create({ name, description, author });
+    const newPost = await this.postsRepository.save({ name, description, author });
 
-    return await this.postsRepository.save(post);
+    return this.transformPost(newPost);
   }
 
 
-  async findAll(): Promise<Post[]> {
-    return await this.postsRepository.find();
+  async findAll(): Promise<PostDto[]> {
+    const posts = await this.postsRepository.find({
+      relations: {
+        author: true
+      }
+    });
+
+    return posts.map(post => this.transformPost(post));
   }
 
+  async findPostById(id: number): Promise<Post> {
+    const post = await this.postsRepository.findOne({
+      where: { id },
+      relations: {
+        author: true
+      }
+    });
 
-  async findOne(id: number): Promise<Post> {
+    return post;
+  }
+
+  async findOne(id: number): Promise<PostDto> {
 
     const post = await this.postsRepository.findOne({
       where: { id },
@@ -50,44 +64,49 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new BadRequestException(`Пост с id = ${id} не найден`);
+      throw new BadRequestException(`Пост с id=${id} не найден`);
     }
 
-    return post;
+    return this.transformPost(post);
   }
 
 
-  async findAllByAuthor(userId: number): Promise<Post[]> {
+  async findAllByAuthor(userId: number): Promise<PostDto[]> {
 
     const author = await this.usersService.getUserById(userId);
 
-    return await this.postsRepository.findBy({ author });
+    const posts = await this.postsRepository.find(
+      {
+        where: { author },
+        relations: { author: true }
+      });
+
+    return posts.map(post => this.transformPost(post));
   }
 
 
-  async update(postId: number, updatePostDto: UpdatePostDto, req: Request): Promise<UpdateResult> {
-
-    // const post = await this.findOne(postId);
-
-    const user = await this.usersService.getUserById(req['user'].id);
-    // console.log(post);
-
-    // if (!user.isAdmin && user.id !== post.author.id) {
-    //   throw new ForbiddenException();
-    // }
+  async update(postId: number, updatePostDto: UpdatePostDto): Promise<UpdateResult> {
 
     const { name, description } = updatePostDto;
 
-    const author = await this.usersService.getUserById(user.id);
+    const post = await this.findOne(postId);
 
-    return this.postsRepository.update({ id: postId }, { name, description, author });
+    return this.postsRepository.update({ id: post.id }, { name, description });
   }
 
 
-  async remove(id: number): Promise<DeleteResult> {
+  async remove(id: number): Promise<PostDto> {
 
-    const post = await this.findOne(id);
+    const post = await this.findPostById(id);
 
-    return await this.postsRepository.delete(post);
+    const removedPost = await this.postsRepository.remove(post);
+
+    return this.transformPost(removedPost);
+  }
+
+  transformPost(post: Post): PostDto {
+    const { author, ...createdPost } = post;
+
+    return { ...createdPost, authorId: author.id };
   }
 }

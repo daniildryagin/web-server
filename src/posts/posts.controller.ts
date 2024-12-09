@@ -8,6 +8,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Request } from 'express';
 import { json } from 'stream/consumers';
 import { PostsGuard } from './guards/posts.guards';
+import { PostDto } from './dto/post.dto';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -18,18 +19,17 @@ export class PostsController {
   async create(
     @Body() createPostDto: CreatePostDto,
     @Req() req: Request
-  ): Promise<PostEntity> {
-    console.log(JSON.stringify(createPostDto))
+  ): Promise<PostDto> {
     return await this.postsService.create(createPostDto, req);
   }
 
   @Get()
-  async findAll(): Promise<PostEntity[]> {
+  async findAll(): Promise<PostDto[]> {
     return await this.postsService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<PostEntity> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<PostDto> {
     return await this.postsService.findOne(id);
   }
 
@@ -40,12 +40,12 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
     @Req() req: Request
   ): Promise<UpdateResult> {
-    return await this.postsService.update(id, updatePostDto, req);
+    return await this.postsService.update(id, updatePostDto);
   }
 
   @UseGuards(PostsGuard)
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<DeleteResult> {
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<PostDto> {
     return await this.postsService.remove(id);
   }
 }
