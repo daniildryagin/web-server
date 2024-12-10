@@ -2,11 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe,
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Post as PostEntity } from './entities/post.entity'
-import { DeleteResult, UpdateResult } from 'typeorm';
+import { UpdateResult } from 'typeorm';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Request } from 'express';
-import { json } from 'stream/consumers';
 import { PostsGuard } from './guards/posts.guards';
 import { PostDto } from './dto/post.dto';
 
@@ -24,8 +22,11 @@ export class PostsController {
   }
 
   @Get()
-  async findAll(): Promise<PostDto[]> {
-    return await this.postsService.findAll();
+  async findAll(
+    @Query('take', ParseIntPipe) take: number,
+    @Query('skip', ParseIntPipe) skip: number,
+  ): Promise<PostDto[]> {
+    return await this.postsService.findAll(take, skip);
   }
 
   @Get(':id')

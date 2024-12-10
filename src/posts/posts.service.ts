@@ -33,11 +33,15 @@ export class PostsService {
   }
 
 
-  async findAll(): Promise<PostDto[]> {
-    const posts = await this.postsRepository.find({
+  async findAll(take: number = 10, skip: number = 0): Promise<PostDto[]> {
+
+    const [posts, count] = await this.postsRepository.findAndCount({
+      order: { publicationDate: 'DESC' },
       relations: {
         author: true
-      }
+      },
+      take,
+      skip
     });
 
     return posts.map(post => this.transformPost(post));
