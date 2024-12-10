@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { BadRequestException, CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { UsersService } from "src/users/users.service";
 import { PostsService } from "../posts.service";
 
@@ -15,6 +15,10 @@ export class PostsGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     const postId = Number(req.params.id);
+
+    if (Number.isNaN(postId)) {
+      throw new BadRequestException('Id не число');
+    }
 
     const post = await this.postsService.findOne(postId);
 
