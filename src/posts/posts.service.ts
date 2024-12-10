@@ -1,13 +1,15 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { And, LessThan, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
 import { PostDto } from './dto/post.dto';
 import { UserDataRequest } from 'src/auth/types/user-data-request.type';
+import { User } from 'src/users/entities/user.entity';
+import { FindPostsParamsDto, OrderingValues, PostsOrderParamValues } from './dto/find-posts-params.dto';
 
 @Injectable()
 export class PostsService {
@@ -33,10 +35,30 @@ export class PostsService {
   }
 
 
-  async findAll(take: number = 10, skip: number = 0): Promise<PostDto[]> {
+  async findAll(searchParams: FindPostsParamsDto): Promise<PostDto[]> {
 
-    const [posts, count] = await this.postsRepository.findAndCount({
-      order: { publicationDate: 'DESC' },
+    const {
+      take = 10,
+      skip = 0,
+      order = PostsOrderParamValues.publicationDate,
+      ordering = OrderingValues.asc,
+      publicationDateFrom = new Date(0),
+      publicationDateTo = new Date(Date.now()),
+      authorId
+    } = searchParams;
+
+    let author: User;
+
+    if (authorId) {
+      author = await this.usersService.getUserById(authorId);
+    }
+
+    const posts = await this.postsRepository.find({
+      where: {
+        author,
+        publicationDate: And(MoreThanOrEqual(publicationDateFrom), LessThan(publicationDateTo))
+      },
+      order: { [order]: ordering },
       relations: {
         author: true
       },

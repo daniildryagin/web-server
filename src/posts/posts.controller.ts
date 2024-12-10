@@ -7,6 +7,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Request } from 'express';
 import { PostsGuard } from './guards/posts.guards';
 import { PostDto } from './dto/post.dto';
+import { FindPostsParamsDto } from './dto/find-posts-params.dto';
 
 @UseGuards(AuthGuard)
 @Controller('posts')
@@ -22,15 +23,15 @@ export class PostsController {
   }
 
   @Get()
-  async findAll(
-    @Query('take', ParseIntPipe) take: number,
-    @Query('skip', ParseIntPipe) skip: number,
+  async findAll1(
+    @Query() findPostsParamsDto: FindPostsParamsDto,
   ): Promise<PostDto[]> {
-    return await this.postsService.findAll(take, skip);
+    console.log(JSON.stringify(findPostsParamsDto))
+    return await this.postsService.findAll(findPostsParamsDto);
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<PostDto> {
+  async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<PostDto> {
     return await this.postsService.findOne(id);
   }
 
@@ -39,14 +40,13 @@ export class PostsController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
-    @Req() req: Request
   ): Promise<UpdateResult> {
     return await this.postsService.update(id, updatePostDto);
   }
 
   @UseGuards(PostsGuard)
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<PostDto> {
+  async remove(@Param('id', new ParseIntPipe()) id: number): Promise<PostDto> {
     return await this.postsService.remove(id);
   }
 }
