@@ -13,6 +13,7 @@ export const appConfig = () => ({
   },
   redisStore: {
     host: process.env.REDIS_STORE_HOST,
-    port: process.env.REDIS_STORE_PORT,
+    port: Number(process.env.REDIS_STORE_PORT),
+    ttl: Number(process.env.REDIS_STORE_TTL),
   }
 })
