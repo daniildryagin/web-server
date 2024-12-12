@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { And, LessThan, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
@@ -10,6 +10,8 @@ import { PostDto } from './dto/post.dto';
 import { UserDataRequest } from 'src/auth/types/user-data-request.type';
 import { User } from 'src/users/entities/user.entity';
 import { FindPostsParamsDto, OrderingValues, PostsOrderParamValues } from './dto/find-posts-params.dto';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PostsService {
@@ -17,7 +19,10 @@ export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postsRepository: Repository<Post>,
-    private readonly usersService: UsersService
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService
   ) { }
 
 
@@ -70,17 +75,6 @@ export class PostsService {
   }
 
   async findPostById(id: number): Promise<Post> {
-    const post = await this.postsRepository.findOne({
-      where: { id },
-      relations: {
-        author: true
-      }
-    });
-
-    return post;
-  }
-
-  async findOne(id: number): Promise<PostDto> {
 
     const post = await this.postsRepository.findOne({
       where: { id },
@@ -93,9 +87,14 @@ export class PostsService {
       throw new BadRequestException(`Пост с id=${id} не найден`);
     }
 
-    return this.transformPost(post);
+    return post;
   }
 
+  async findOne(id: number): Promise<PostDto> {
+    const post = await this.findPostById(id);
+
+    return this.transformPost(post);
+  }
 
   async findAllByAuthor(userId: number): Promise<PostDto[]> {
 
@@ -115,9 +114,17 @@ export class PostsService {
 
     const { name, description } = updatePostDto;
 
-    const post = await this.findOne(postId);
+    const post = await this.findPostById(postId);
 
-    return this.postsRepository.update({ id: post.id }, { name, description });
+    const updateResult = await this.postsRepository.update({ id: post.id }, { name, description });
+
+    await this.cacheManager.del(`/posts/${postId}`);
+
+    if (updateResult.affected > 0) {
+      this.cacheManager.del(postId + '');
+    }
+
+    return updateResult;
   }
 
 
@@ -126,6 +133,8 @@ export class PostsService {
     const post = await this.findPostById(id);
 
     const removedPost = await this.postsRepository.remove(post);
+
+    await this.cacheManager.del(`/posts/${id}`);
 
     return this.transformPost(removedPost);
   }

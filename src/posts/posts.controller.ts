@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, Request as Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, Request as Req, UseInterceptors } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -8,12 +8,13 @@ import { Request } from 'express';
 import { PostsGuard } from './guards/posts.guards';
 import { PostDto } from './dto/post.dto';
 import { FindPostsParamsDto } from './dto/find-posts-params.dto';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
-@UseGuards(AuthGuard)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
 
+  @UseGuards(AuthGuard)
   @Post()
   async create(
     @Body() createPostDto: CreatePostDto,
@@ -23,19 +24,19 @@ export class PostsController {
   }
 
   @Get()
-  async findAll1(
+  async findAll(
     @Query() findPostsParamsDto: FindPostsParamsDto,
   ): Promise<PostDto[]> {
-    console.log(JSON.stringify(findPostsParamsDto))
     return await this.postsService.findAll(findPostsParamsDto);
   }
 
+  @UseInterceptors(CacheInterceptor)
   @Get(':id')
   async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<PostDto> {
     return await this.postsService.findOne(id);
   }
 
-  @UseGuards(PostsGuard)
+  @UseGuards(AuthGuard, PostsGuard)
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
@@ -44,7 +45,7 @@ export class PostsController {
     return await this.postsService.update(id, updatePostDto);
   }
 
-  @UseGuards(PostsGuard)
+  @UseGuards(AuthGuard, PostsGuard)
   @Delete(':id')
   async remove(@Param('id', new ParseIntPipe()) id: number): Promise<PostDto> {
     return await this.postsService.remove(id);
