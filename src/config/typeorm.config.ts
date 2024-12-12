@@ -1,18 +1,14 @@
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from "@nestjs/typeorm";
-import { DataSourceOptions } from "typeorm";
+import { ConfigService } from "@nestjs/config";
+import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 
-export class TypeormConfig implements TypeOrmOptionsFactory {
-  createTypeOrmOptions(): TypeOrmModuleOptions {
-    return {
-      type: 'postgres',
-      host: process.env.DATABASE_HOST,
-      port: Number(process.env.DATABASE_PORT),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
-      entities: ['dist/**/*entity.js'],
-      migrations: ['dist/database/migrations/*.js'],
-      synchronize: false,
-    };
-  }
-}
+export const typeOrmConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
+  type: 'postgres',
+  host: configService.get<string>('database.host'),
+  port: configService.get<number>('database.port'),
+  username: configService.get<string>('database.user'),
+  password: configService.get<string>('database.password'),
+  database: configService.get<string>('database.name'),
+  entities: ['dist/**/*entity.js'],
+  migrations: ['dist/database/migrations/*.js'],
+  synchronize: false,
+})
