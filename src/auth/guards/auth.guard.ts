@@ -3,9 +3,8 @@ import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { jwtConstants } from "../jwt.constants";
 import { utils } from "../utils/utils";
-import { UsersService } from "src/users/users.service";
 import { Payload } from "../types/payload.type";
-import { UserDataRequest } from "../types/user-data-request.type";
+import { RequestUserData } from "../types/request-user-data.type";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,7 +30,7 @@ export class AuthGuard implements CanActivate {
         }
       );
 
-      const userData: UserDataRequest = { id: payload.sub, email: payload.email };
+      const userData: RequestUserData = { id: payload.sub, email: payload.email };
 
       utils.attachUserDataToRequest(req, userData);
     }
