@@ -1,6 +1,6 @@
 import { IsDate, IsEnum, IsNumber, IsOptional } from "class-validator"
 import { Type } from "class-transformer"
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
+import { ApiPropertyOptional } from "@nestjs/swagger"
 
 export enum OrderingValues {
   Asc = 'asc',

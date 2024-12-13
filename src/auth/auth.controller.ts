@@ -1,11 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Request as Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UsersService } from 'src/users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { Tokens } from './types/tokens.type';
 import { Request } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiOkResponse } from '@nestjs/swagger';
-import { PostResponseDto } from 'src/posts/dto/post-response.dto';
+import { ApiBearerAuth, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
