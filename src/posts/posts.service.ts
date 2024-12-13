@@ -6,10 +6,10 @@ import { Post } from './entities/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
-import { PostDto } from './dto/post.dto';
-import { UserDataRequest } from 'src/auth/types/user-data-request.type';
+import { PostResponseDto } from './dto/post-response.dto';
+import { RequestUserData } from 'src/auth/types/request-user-data.type';
 import { User } from 'src/users/entities/user.entity';
-import { FindPostsParamsDto, OrderingValues, PostsOrderParamValues } from './dto/find-posts-params.dto';
+import { FindPostsParamsDto } from './dto/find-posts-params.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ConfigService } from '@nestjs/config';
 
@@ -26,11 +26,11 @@ export class PostsService {
   ) { }
 
 
-  async create(createPostDto: CreatePostDto, req: Request): Promise<PostDto> {
+  async create(createPostDto: CreatePostDto, req: Request): Promise<PostResponseDto> {
 
     const { name, description } = createPostDto;
 
-    const user: UserDataRequest = req['user'];
+    const user: RequestUserData = req['user'];
 
     const author = await this.usersService.getUserById(user.id);
 
@@ -40,17 +40,11 @@ export class PostsService {
   }
 
 
-  async findAll(searchParams: FindPostsParamsDto): Promise<PostDto[]> {
+  async findAll(searchParams: FindPostsParamsDto): Promise<PostResponseDto[]> {
 
-    const {
-      take = 10,
-      skip = 0,
-      order = PostsOrderParamValues.publicationDate,
-      ordering = OrderingValues.asc,
-      publicationDateFrom = new Date(0),
-      publicationDateTo = new Date(Date.now()),
-      authorId
-    } = searchParams;
+    const { take, skip, order, ordering,
+      publicationDateFrom, publicationDateTo,
+      authorId } = searchParams;
 
     let author: User;
 
@@ -90,13 +84,13 @@ export class PostsService {
     return post;
   }
 
-  async findOne(id: number): Promise<PostDto> {
+  async findOne(id: number): Promise<PostResponseDto> {
     const post = await this.findPostById(id);
 
     return this.transformPost(post);
   }
 
-  async findAllByAuthor(userId: number): Promise<PostDto[]> {
+  async findAllByAuthor(userId: number): Promise<PostResponseDto[]> {
 
     const author = await this.usersService.getUserById(userId);
 
@@ -128,7 +122,7 @@ export class PostsService {
   }
 
 
-  async remove(id: number): Promise<PostDto> {
+  async remove(id: number): Promise<PostResponseDto> {
 
     const post = await this.findPostById(id);
 
@@ -139,7 +133,7 @@ export class PostsService {
     return this.transformPost(removedPost);
   }
 
-  transformPost(post: Post): PostDto {
+  transformPost(post: Post): PostResponseDto {
     const { author, ...createdPost } = post;
 
     return { ...createdPost, authorId: author.id };

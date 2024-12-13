@@ -9,6 +9,7 @@ import { Tokens } from './types/tokens.type';
 import { Payload } from './types/payload.type';
 import { Request } from 'express';
 import { utils } from './utils/utils'
+import { RequestUserData } from './types/request-user-data.type';
 
 
 @Injectable()
@@ -21,7 +22,7 @@ export class AuthService {
   async signUp(signUpDto: SignInDto): Promise<Tokens> {
 
     const newUser = await this.usersService.createUser(signUpDto);
-    const payload = this.createPayload(newUser.id, newUser.email);
+    const payload = this.createPayload(newUser);
     const tokens = await this.getTokens(payload);
 
     await this.usersService.saveUser(newUser);
@@ -32,6 +33,7 @@ export class AuthService {
   async signIn(signInDto: SignInDto): Promise<Tokens> {
 
     const { email, password } = signInDto;
+
     let user: User;
 
     try {
@@ -49,9 +51,7 @@ export class AuthService {
       throw new UnauthorizedException('Неверный логин или пароль.');
     }
 
-    const payload = this.createPayload(user.id, user.email);
-
-    return await this.getTokens(payload);
+    return await this.getTokens(this.createPayload(user));
   }
 
   async refreshTokens(request: Request): Promise<Tokens> {
@@ -59,14 +59,14 @@ export class AuthService {
     const refreshToken = utils.extractToken(request);
 
     try {
-      const { sub, email } = await this.jwtService.verifyAsync<Payload>(
+      const payload = await this.jwtService.verifyAsync<Payload>(
         refreshToken,
         {
           secret: jwtConstants.RT_SECRET
         }
       );
 
-      return await this.getTokens({ sub, email });
+      return await this.getTokens(payload);
     }
     catch (err) {
       throw new UnauthorizedException(err.message);
@@ -94,7 +94,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  private createPayload(sub: number, email: string): Payload {
-    return { sub, email };
+  private createPayload({ id, email }: RequestUserData): Payload {
+    return { sub: id, email };
   }
 }

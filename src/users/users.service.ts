@@ -5,8 +5,9 @@ import { Repository, UpdateResult } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { UserDto } from './dto/user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Request } from 'express';
 
 
 @Injectable()
@@ -19,12 +20,18 @@ export class UsersService {
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
 
-    const { email, password } = createUserDto;
+    const { email, password, username } = createUserDto;
 
-    const user = await this.usersRepository.findOneBy({ email });
+    let user = await this.usersRepository.findOneBy({ email });
 
     if (user) {
       throw new BadRequestException('Этот email уже занят.');
+    }
+
+    user = await this.usersRepository.findOneBy({ username })
+
+    if (user) {
+      throw new BadRequestException('Это имя пользователя уже занято.');
     }
 
     const encryptedPassword = await this.hashPassword(password);
@@ -39,7 +46,7 @@ export class UsersService {
     return newUser;
   }
 
-  async createNewUser(createUserDto: CreateUserDto): Promise<UserDto> {
+  async createNewUser(createUserDto: CreateUserDto, request: Request): Promise<UserResponseDto> {
     const user = await this.createUser(createUserDto);
 
     return this.transformUser(await this.saveUser(user));
@@ -49,7 +56,7 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
-  async getAllUsers(): Promise<UserDto[]> {
+  async getAllUsers(): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.find();
 
     return users.map(user => this.transformUser(user));
@@ -66,7 +73,7 @@ export class UsersService {
     return user;
   }
 
-  async findOneById(id: number): Promise<UserDto> {
+  async findOneById(id: number): Promise<UserResponseDto> {
     const user = await this.getUserById(id);
 
     return this.transformUser(user);
@@ -83,7 +90,7 @@ export class UsersService {
     return user;
   }
 
-  async findUserByEmail(email: string): Promise<UserDto> {
+  async findUserByEmail(email: string): Promise<UserResponseDto> {
     const user = await this.getUserByEmail(email);
 
     return this.transformUser(user);
@@ -96,7 +103,7 @@ export class UsersService {
     return await this.usersRepository.update({ id: user.id }, { ...updateUserDto });
   }
 
-  async deleteUserById(id: number): Promise<UserDto> {
+  async deleteUserById(id: number): Promise<UserResponseDto> {
 
     const user = await this.getUserById(id);
 
@@ -120,7 +127,7 @@ export class UsersService {
     return await bcrypt.hash(password, 10);
   }
 
-  transformUser(user: User): UserDto {
+  transformUser(user: User): UserResponseDto {
     const { password, ...transformedUser } = user;
 
     return transformedUser;
