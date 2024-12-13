@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { UserDataRequest } from "../types/user-data-request.type";
+import { RequestUserData } from "../types/request-user-data.type";
 
 export const utils = {
 
@@ -8,9 +8,9 @@ export const utils = {
     return type?.toLowerCase() === 'bearer' ? accessToken : undefined;
   },
 
-  attachUserDataToRequest(request: Request, user: UserDataRequest): Request {
+  attachUserDataToRequest(request: Request, userData: RequestUserData): Request {
 
-    request['user'] = { ...user };
+    request['user'] = userData;
 
     return request;
   }
