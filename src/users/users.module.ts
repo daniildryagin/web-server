@@ -3,8 +3,9 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Post } from 'src/posts/entities/post.entity';
-import { PostsService } from 'src/posts/posts.service';
+import { PostsService } from '../posts/posts.service';
+import { Post } from '../posts/entities/post.entity';
+
 
 @Module({
   providers: [UsersService, PostsService],

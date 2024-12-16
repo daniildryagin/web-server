@@ -1,7 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { User } from 'src/users/entities/user.entity';
 import { SignInDto } from './dto/sign-in.dto';
-import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from './jwt.constants';
@@ -10,6 +8,8 @@ import { Payload } from './types/payload.type';
 import { Request } from 'express';
 import { utils } from './utils/utils'
 import { RequestUserData } from './types/request-user-data.type';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
 
 
 @Injectable()

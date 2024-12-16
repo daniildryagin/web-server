@@ -9,7 +9,6 @@ export const utils = {
   },
 
   attachUserDataToRequest(request: Request, userData: RequestUserData): Request {
-
     request['user'] = userData;
 
     return request;

@@ -1,18 +1,18 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PostsService } from 'src/posts/posts.service';
 import { UpdateResult } from 'typeorm';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersGuard } from './guards/users.guard';
-import { PostResponseDto } from 'src/posts/dto/post-response.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { AdminGuard } from 'src/common/guards/admin.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { Request } from 'express';
 import { UpdateResultDto } from '../common/dto/update-result.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { PostsService } from '../posts/posts.service';
+import { AdminGuard } from '../common/guards/admin.guard';
+import { PostResponseDto } from '../posts/dto/post-response.dto';
 
 
 @ApiBearerAuth()

@@ -4,14 +4,13 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { And, LessThan, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
 import { PostResponseDto } from './dto/post-response.dto';
-import { RequestUserData } from 'src/auth/types/request-user-data.type';
-import { User } from 'src/users/entities/user.entity';
 import { FindPostsParamsDto } from './dto/find-posts-params.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../users/users.service';
+import { RequestUserData } from '../auth/types/request-user-data.type';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class PostsService {
@@ -22,7 +21,6 @@ export class PostsService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
     private readonly usersService: UsersService,
-    private readonly configService: ConfigService
   ) { }
 
 

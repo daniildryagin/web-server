@@ -3,14 +3,14 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { UpdateResult } from 'typeorm';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { Request } from 'express';
 import { PostsGuard } from './guards/posts.guards';
 import { PostResponseDto } from './dto/post-response.dto';
 import { FindPostsParamsDto } from './dto/find-posts-params.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
-import { UpdateResultDto } from 'src/common/dto/update-result.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { UpdateResultDto } from '../common/dto/update-result.dto';
 
 @Controller('posts')
 export class PostsController {
