@@ -1,7 +1,7 @@
 import { ApiProperty, PickType } from "@nestjs/swagger"
-import { CreatePostDto } from "./create-post.dto"
+import { CreateArticleDto } from "./create-article.dto"
 
-export class PostResponseDto extends PickType(CreatePostDto, ['description', 'name'] as const) {
+export class ArticleResponseDto extends PickType(CreateArticleDto, ['description', 'name'] as const) {
 
   @ApiProperty({
     type: Number

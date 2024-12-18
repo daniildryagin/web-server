@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Post } from "../../posts/entities/post.entity";
+import { Article } from "../../articles/entities/article.entity";
 
 @Entity()
 export class User {
@@ -19,6 +19,6 @@ export class User {
   @Column({ nullable: false, default: false })
   isAdmin: boolean
 
-  @OneToMany(() => Post, (post) => post.author)
-  posts: Post[]
+  @OneToMany(() => Article, (article) => article.author)
+  articles: Article[]
 }

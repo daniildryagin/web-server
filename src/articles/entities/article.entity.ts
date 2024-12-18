@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } f
 import { User } from "../../users/entities/user.entity";
 
 @Entity()
-export class Post {
+export class Article {
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,6 +16,6 @@ export class Post {
   @CreateDateColumn()
   publicationDate: Date;
 
-  @ManyToOne(() => User, (user) => user.posts)
+  @ManyToOne(() => User, (user) => user.articles)
   author: User;
 }

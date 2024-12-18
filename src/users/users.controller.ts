@@ -10,9 +10,9 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiPara
 import { Request } from 'express';
 import { UpdateResultDto } from '../common/dto/update-result.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { PostsService } from '../posts/posts.service';
+import { ArticlesService } from '../articles/articles.service';
 import { AdminGuard } from '../common/guards/admin.guard';
-import { PostResponseDto } from '../posts/dto/post-response.dto';
+import { ArticleResponseDto } from '../articles/dto/article-response.dto';
 
 
 @ApiBearerAuth()
@@ -21,7 +21,7 @@ import { PostResponseDto } from '../posts/dto/post-response.dto';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly postsService: PostsService
+    private readonly articlesService: ArticlesService
   ) { }
 
   @ApiOperation({ summary: 'Получить всех пользователей' })
@@ -39,7 +39,7 @@ export class UsersController {
     return await this.usersService.findOneById(id);
   }
 
-  @ApiOperation({ summary: 'Создать пользователя (только для админов)' })
+  @ApiOperation({ summary: 'Создать пользователя' })
   @ApiCreatedResponse({ type: UserResponseDto })
   @UseGuards(AdminGuard)
   @Post()
@@ -73,10 +73,10 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Получить статьи пользователя' })
   @ApiParam({ name: 'id', description: 'ID пользователя' })
-  @ApiOkResponse({ type: [PostResponseDto] })
-  @Get(':id/posts')
-  async getPostsByAuthor(@Param('id', ParseIntPipe) userId: number): Promise<PostResponseDto[]> {
-    return await this.postsService.findAllByAuthor(userId);
+  @ApiOkResponse({ type: [ArticleResponseDto] })
+  @Get(':id/articles')
+  async getArticlesByAuthor(@Param('id', ParseIntPipe) userId: number): Promise<ArticleResponseDto[]> {
+    return await this.articlesService.findAllByAuthor(userId);
   }
 
   @ApiOperation({ summary: 'Изменить пароль' })

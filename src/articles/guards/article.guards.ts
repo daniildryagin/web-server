@@ -1,30 +1,30 @@
 import { BadRequestException, CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
-import { PostsService } from "../posts.service";
+import { ArticlesService } from "../articles.service";
 import { UsersService } from "../../users/users.service";
 
 @Injectable()
-export class PostsGuard implements CanActivate {
+export class ArticlesGuard implements CanActivate {
 
   constructor(
     private readonly usersService: UsersService,
-    private readonly postsService: PostsService
+    private readonly articlesService: ArticlesService
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
 
     const req = context.switchToHttp().getRequest();
 
-    const postId = Number(req.params.id);
+    const articleId = Number(req.params.id);
 
-    if (Number.isNaN(postId)) {
+    if (Number.isNaN(articleId)) {
       throw new BadRequestException('Id не число');
     }
 
-    const post = await this.postsService.findOne(postId);
+    const article = await this.articlesService.findOne(articleId);
 
     const user = await this.usersService.getUserById(req['user'].id);
 
-    if (!user.isAdmin && user.id !== post.authorId) {
+    if (!user.isAdmin && user.id !== article.authorId) {
       return false;
     }
 

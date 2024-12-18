@@ -7,12 +7,12 @@ export enum OrderingValues {
   Desc = 'desc'
 }
 
-export enum PostsOrderParamValues {
+export enum ArticlesOrderParamValues {
   PublicationDate = 'publicationDate',
   Name = 'name'
 }
 
-export class FindPostsParamsDto {
+export class FindArticlesParamsDto {
 
   @ApiPropertyOptional({
     type: Number,
@@ -33,13 +33,13 @@ export class FindPostsParamsDto {
   skip?: number = 0
 
   @ApiPropertyOptional({
-    enum: PostsOrderParamValues,
+    enum: ArticlesOrderParamValues,
     description: 'Сортировка по',
-    default: PostsOrderParamValues.PublicationDate
+    default: ArticlesOrderParamValues.PublicationDate
   })
   @IsOptional()
-  @IsEnum(PostsOrderParamValues)
-  order?: PostsOrderParamValues = PostsOrderParamValues.PublicationDate
+  @IsEnum(ArticlesOrderParamValues)
+  order?: ArticlesOrderParamValues = ArticlesOrderParamValues.PublicationDate
 
   @ApiPropertyOptional({
     enum: OrderingValues,
