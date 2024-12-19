@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/sw
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { UpdateResultDto } from '../common/dto/update-result.dto';
 import { ArticlesService } from './articles.service';
+import { RequestUserData } from '../auth/types/request-user-data.type';
 
 @Controller('articles')
 export class ArticlesController {
@@ -25,7 +26,8 @@ export class ArticlesController {
     @Body() createArticleDto: CreateArticleDto,
     @Req() req: Request
   ): Promise<ArticleResponseDto> {
-    return await this.articlesService.create(createArticleDto, req);
+    const user: RequestUserData = req['user'];
+    return await this.articlesService.create(createArticleDto, user);
   }
 
   @ApiOperation({ summary: 'Получить статьи' })
@@ -43,7 +45,7 @@ export class ArticlesController {
   @UseInterceptors(CacheInterceptor)
   @Get(':id')
   async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<ArticleResponseDto> {
-    return await this.articlesService.findOne(id);
+    return await this.articlesService.findOneById(id);
   }
 
   @ApiBearerAuth()
@@ -55,7 +57,7 @@ export class ArticlesController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateArticleDto: UpdateArticleDto,
-  ): Promise<UpdateResult> {
+  ): Promise<ArticleResponseDto> {
     return await this.articlesService.update(id, updateArticleDto);
   }
 

@@ -4,7 +4,6 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { And, LessThan, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
 import { Article } from './entities/article.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Request } from 'express';
 import { ArticleResponseDto } from './dto/article-response.dto';
 import { FindArticlesParamsDto } from './dto/find-articles-params.dto';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -24,11 +23,8 @@ export class ArticlesService {
   ) { }
 
 
-  async create(createArticleDto: CreateArticleDto, req: Request): Promise<ArticleResponseDto> {
-
+  async create(createArticleDto: CreateArticleDto, user: RequestUserData): Promise<ArticleResponseDto> {
     const { name, description } = createArticleDto;
-
-    const user: RequestUserData = req['user'];
 
     const author = await this.usersService.getUserById(user.id);
 
@@ -39,7 +35,6 @@ export class ArticlesService {
 
 
   async findAll(searchParams: FindArticlesParamsDto): Promise<ArticleResponseDto[]> {
-
     const { take, skip, order, ordering,
       publicationDateFrom, publicationDateTo,
       authorId } = searchParams;
@@ -50,7 +45,7 @@ export class ArticlesService {
       author = await this.usersService.getUserById(authorId);
     }
 
-    const articless = await this.articlesRepository.find({
+    const articles = await this.articlesRepository.find({
       where: {
         author,
         publicationDate: And(MoreThanOrEqual(publicationDateFrom), LessThan(publicationDateTo))
@@ -63,76 +58,68 @@ export class ArticlesService {
       skip
     });
 
-    return articless.map(articles => this.transformArticle(articles));
+    return articles.map(articles => this.transformArticle(articles));
   }
 
   async findArticleById(id: number): Promise<Article> {
-
-    const articles = await this.articlesRepository.findOne({
+    const article = await this.articlesRepository.findOne({
       where: { id },
       relations: {
         author: true
       }
     });
 
-    if (!articles) {
+    if (!article) {
       throw new BadRequestException(`Пост с id=${id} не найден`);
     }
 
-    return articles;
+    return article;
   }
 
-  async findOne(id: number): Promise<ArticleResponseDto> {
-    const articles = await this.findArticleById(id);
+  async findOneById(id: number): Promise<ArticleResponseDto> {
+    const article = await this.findArticleById(id);
 
-    return this.transformArticle(articles);
+    return this.transformArticle(article);
   }
 
   async findAllByAuthor(userId: number): Promise<ArticleResponseDto[]> {
-
     const author = await this.usersService.getUserById(userId);
 
-    const articless = await this.articlesRepository.find(
+    const articles = await this.articlesRepository.find(
       {
         where: { author },
         relations: { author: true }
       });
 
-    return articless.map(articles => this.transformArticle(articles));
+    return articles.map(articles => this.transformArticle(articles));
   }
 
 
-  async update(articlesId: number, updateArticleDto: UpdateArticleDto): Promise<UpdateResult> {
-
+  async update(articleId: number, updateArticleDto: UpdateArticleDto): Promise<ArticleResponseDto> {
     const { name, description } = updateArticleDto;
 
-    const articles = await this.findArticleById(articlesId);
+    const article = await this.findArticleById(articleId);
 
-    const updateResult = await this.articlesRepository.update({ id: articles.id }, { name, description });
+    await this.articlesRepository.update({ id: article.id }, { name, description });
 
-    await this.cacheManager.del(`/articless/${articlesId}`);
+    await this.cacheManager.del(`/articles/${articleId}`);
 
-    if (updateResult.affected > 0) {
-      this.cacheManager.del(articlesId + '');
-    }
-
-    return updateResult;
+    return this.findOneById(articleId);
   }
 
 
   async remove(id: number): Promise<ArticleResponseDto> {
+    const article = await this.findArticleById(id);
 
-    const articles = await this.findArticleById(id);
+    const removedArticle = await this.articlesRepository.remove(article);
 
-    const removedArticle = await this.articlesRepository.remove(articles);
-
-    await this.cacheManager.del(`/articless/${id}`);
+    await this.cacheManager.del(`/articles/${id}`);
 
     return this.transformArticle(removedArticle);
   }
 
-  transformArticle(articles: Article): ArticleResponseDto {
-    const { author, ...createdArticle } = articles;
+  transformArticle(article: Article): ArticleResponseDto {
+    const { author, ...createdArticle } = article;
 
     return { ...createdArticle, authorId: author.id };
   }
